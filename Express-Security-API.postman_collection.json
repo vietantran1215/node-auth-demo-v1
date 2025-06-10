@@ -1,0 +1,882 @@
+{
+	"info": {
+		"_postman_id": "a5a79f1d-2d6b-4f63-a8b9-d1bbf4c7e58e",
+		"name": "Express Security API",
+		"description": "A collection for testing the Express Security API with JWT authentication, refresh tokens, and secure logout features.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"description": "Endpoints related to user authentication, token management, and session control.",
+			"item": [
+				{
+					"name": "Sign Up",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"secret123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"signup"
+							]
+						},
+						"description": "Register a new user in the system."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.environment.set('accessToken', response.accessToken);",
+									"    pm.environment.set('refreshToken', response.refreshToken);",
+									"    pm.environment.set('deviceId', response.deviceId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe\",\n    \"password\": \"secret123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Authenticate a user and receive access and refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"me"
+							]
+						},
+						"description": "Get the current user's profile information."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.environment.set('accessToken', response.accessToken);",
+									"    pm.environment.set('refreshToken', response.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"refresh"
+							]
+						},
+						"description": "Get a new access token using a refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout (Current Device)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "X-Device-Id",
+								"value": "{{deviceId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "Logout from the current device by invalidating the current token."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout (All Devices)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/logout-all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"logout-all"
+							]
+						},
+						"description": "Logout from all devices by invalidating all tokens for the current user."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tests",
+			"description": "Test scenarios for various authentication flows.",
+			"item": [
+				{
+					"name": "Full Auth Flow",
+					"item": [
+						{
+							"name": "1. Sign Up",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.test(\"User created successfully\", function () {",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.message).to.equal(\"User created successfully\");",
+											"    pm.expect(response.user).to.be.an('object');",
+											"    pm.expect(response.user.username).to.be.a('string');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Test User\",\n    \"username\": \"testuser{{$timestamp}}\",\n    \"email\": \"testuser{{$timestamp}}@example.com\",\n    \"password\": \"test123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/signup",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Login successful, tokens received\", function () {",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.accessToken).to.be.a('string');",
+											"    pm.expect(response.refreshToken).to.be.a('string');",
+											"    pm.expect(response.deviceId).to.be.a('string');",
+											"    ",
+											"    // Save tokens for subsequent requests",
+											"    pm.environment.set('accessToken', response.accessToken);",
+											"    pm.environment.set('refreshToken', response.refreshToken);",
+											"    pm.environment.set('deviceId', response.deviceId);",
+											"    pm.environment.set('testUsername', pm.request.body.json().username);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// Extract username from the previous request",
+											"const previousRequest = pm.collectionVariables.get('previousRequest');",
+											"if (previousRequest) {",
+											"    const request = JSON.parse(previousRequest);",
+											"    const username = JSON.parse(request.body.raw).username;",
+											"    pm.variables.set('testUsername', username);",
+											"} else {",
+											"    // Default if no previous request",
+											"    pm.variables.set('testUsername', 'testuser' + new Date().getTime());",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"{{testUsername}}\",\n    \"password\": \"test123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Get Profile",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Profile data is correct\", function () {",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.user).to.be.an('object');",
+											"    pm.expect(response.user.username).to.equal(pm.environment.get('testUsername'));",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Refresh Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"New tokens received\", function () {",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.accessToken).to.be.a('string');",
+											"    pm.expect(response.refreshToken).to.be.a('string');",
+											"    ",
+											"    // Save new tokens",
+											"    pm.environment.set('oldAccessToken', pm.environment.get('accessToken'));",
+											"    pm.environment.set('accessToken', response.accessToken);",
+											"    pm.environment.set('refreshToken', response.refreshToken);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/refresh",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"refresh"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Verify Old Token Invalid",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{oldAccessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. Verify New Token Valid",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "7. Logout",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Logout successful\", function () {",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.message).to.include('Logged out successfully');",
+											"});",
+											"",
+											"// Clear tokens from environment",
+											"pm.environment.unset('accessToken');",
+											"pm.environment.unset('refreshToken');",
+											"pm.environment.unset('deviceId');"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/logout",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "8. Verify Logged Out",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{accessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Multi-Device Logout",
+					"item": [
+						{
+							"name": "1. Login Device 1",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"const response = pm.response.json();",
+											"if (response.accessToken) {",
+											"    pm.environment.set('device1AccessToken', response.accessToken);",
+											"    pm.environment.set('device1RefreshToken', response.refreshToken);",
+											"    pm.environment.set('device1Id', response.deviceId);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"johndoe\",\n    \"password\": \"secret123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Login Device 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"const response = pm.response.json();",
+											"if (response.accessToken) {",
+											"    pm.environment.set('device2AccessToken', response.accessToken);",
+											"    pm.environment.set('device2RefreshToken', response.refreshToken);",
+											"    pm.environment.set('device2Id', response.deviceId);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"johndoe\",\n    \"password\": \"secret123\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Verify Device 1 Access",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{device1AccessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Verify Device 2 Access",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{device2AccessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Logout All Devices",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Logout from all devices successful\", function () {",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.message).to.include('Logged out successfully');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{device1AccessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/logout-all",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"logout-all"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "6. Verify Device 1 Logged Out",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{device1AccessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "7. Verify Device 2 Logged Out",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});",
+											"",
+											"// Clean up environment variables",
+											"pm.environment.unset('device1AccessToken');",
+											"pm.environment.unset('device1RefreshToken');",
+											"pm.environment.unset('device1Id');",
+											"pm.environment.unset('device2AccessToken');",
+											"pm.environment.unset('device2RefreshToken');",
+											"pm.environment.unset('device2Id');"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{device2AccessToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"me"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		}
+	]
+} 

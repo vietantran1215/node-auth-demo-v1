@@ -7,6 +7,7 @@ declare global {
     interface Request {
       user?: {
         userId: string;
+        deviceId: string;
       };
     }
   }
@@ -25,14 +26,17 @@ export const authenticateAccessToken = async (
     }
 
     const token = authHeader.split(' ')[1];
-    const payload = verifyAccessToken(token);
+    const payload = await verifyAccessToken(token);
 
-    if (!payload) {
+    if (!payload || !payload.userId || !payload.deviceId) {
       res.status(401).json({ error: 'Invalid or expired access token' });
       return;
     }
 
-    req.user = { userId: payload.userId };
+    req.user = { 
+      userId: payload.userId,
+      deviceId: payload.deviceId
+    };
     next();
   } catch (error) {
     res.status(401).json({ error: 'Authentication failed' });
@@ -52,12 +56,15 @@ export const authenticateRefreshToken = async (
     }
 
     const payload = await verifyRefreshToken(refreshToken);
-    if (!payload) {
+    if (!payload || !payload.userId || !payload.deviceId) {
       res.status(401).json({ error: 'Invalid or expired refresh token' });
       return;
     }
 
-    req.user = { userId: payload.userId };
+    req.user = { 
+      userId: payload.userId,
+      deviceId: payload.deviceId
+    };
     next();
   } catch (error) {
     res.status(401).json({ error: 'Authentication failed' });
@@ -74,10 +81,13 @@ export const authenticateAnyToken = async (
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      const payload = verifyAccessToken(token);
+      const payload = await verifyAccessToken(token);
       
-      if (payload) {
-        req.user = { userId: payload.userId };
+      if (payload && payload.userId && payload.deviceId) {
+        req.user = { 
+          userId: payload.userId,
+          deviceId: payload.deviceId
+        };
         next();
         return;
       }
@@ -88,8 +98,11 @@ export const authenticateAnyToken = async (
     if (refreshToken) {
       const payload = await verifyRefreshToken(refreshToken);
       
-      if (payload) {
-        req.user = { userId: payload.userId };
+      if (payload && payload.userId && payload.deviceId) {
+        req.user = { 
+          userId: payload.userId,
+          deviceId: payload.deviceId
+        };
         next();
         return;
       }

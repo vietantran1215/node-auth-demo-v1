@@ -1,0 +1,99 @@
+10/06/2025 NodeJS Note:
+
+ExpressJS App
+- RESTful API
+  + Route handlers (function)
+  + Middleware
+
+* Authentication
+- "Xác thực" (đăng nhập)
+  Client (App) --> Credential (Object body username/email + password) --> Generate JWT (encode)
+
+* Authorization
+- Middleware (req, res, next) --> Verify JWT (Valid) --> next() --> handler
+- "/api/admin" (yêu cầu user phải đăng nhập mới có thể access vào trong tính năng/resource)
+  + Header key --> Backend --> Resource
+
+* Non-SSO
+  + Không dùng Auth Provider bên thứ 3 để xác thực người dùng
+  + JWT - Json web token
+* SSO (single-sign on)
+  + Dùng Auth Provider bên thứ 3 để xác thực người dùng:
+    + Google
+    + Microsoft
+    ...
+
+* JWT valid?
+- JWT decode JWT
+  + success
+  + Expiry Time
+  + Ownership
+
+- Permission
+  + PUT /post/:id (userId: 1)
+  + User { id: 1 }
+
+* JWT
+- Access Token
+- Refresh Token
+
+* Installation
+- npm install jsonwebtoken bcryptjs redis
+- npm install -D @types/jsonwebtoken @types/bcryptjs (dependencies VS devDependencies)
+- cors, dotenv
+
+Objective:
+- Authen API with JWT
+- Sign up & login flows (password hashing with bcrypt)
+- Access & refresh tokens with JWT
+- Auth middleware
+- Storing refresh tokens (Redis / DB)
+
+Project structure (flow):
+1/ index (entry file, chạy config, chạy global middleware, chạy Express Router)
+2/ Routes (chạy route middleware)
+3/ Middleware (handler middleware)
+4/ Controller (business logic, interact with in-memory/JS-arr data storage)
+5/ Utils (jwt, validation)
+
+Agenda:
+
+* Auth
+- Authentication:
+  + Login API, respond JWT
+- Authorization:
+  + Appling Auth middleware for protecting API
+
+* JWT - jsonwebtoken
+- What is JWT?
+  + String, encrypt
+- Parts of JWT?
+  + Header
+  + Payload
+  + Signature
+- JWT Algorithm
+- Token Lifespan
+  + exp (expiration)
+- Refresh token
+  + Why do we need to both access token and refresh token?
+- Best practices?
+
+* Password Hashing (Bcrypt)
+- https://www.npmjs.com/package/bcrypt
+
+* Redis
+- Introduction
+  + refresh_token
+  + in-memory database
+    + server riêng
+- Installation
+- Data types
+- pub/sub
+
+* Case study (API):
+1. Sign up (with password hashing with bcrypt)
+2. Login (Authentication)
+3. Refresh token
+4. Get profile
+5. Log out (1 device)
+6. Log out (all devices)

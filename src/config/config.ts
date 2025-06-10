@@ -5,9 +5,9 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 export const config = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 8080,
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
   accessTokenExpiry: '15m',
   refreshTokenExpiry: '7d',
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-}; 
+};

@@ -27,6 +27,19 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the API' });
 });
 
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Global error handler:', err);
+
+  // Default error response
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+
+  res.status(statusCode).json({
+    error: message
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
